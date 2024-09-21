@@ -1,0 +1,12 @@
+langchain
+langchain-community
+unstructured
+markdown
+sentence-transformers
+langchain-huggingface
+faiss-cpu
+numpy
+fastapi
+uvicorn
+sqlalchemy
+python-dotenv

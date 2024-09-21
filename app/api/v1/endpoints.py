@@ -1,0 +1,77 @@
+import uuid
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from app.schemas.model_path import ModelPath
+from app.schemas.search import SimilaritySearchRequest
+from app.schemas.git_path import GitPath
+from app.services.db.task_result import get_task_status, create_task
+from app.services.task_service import create_vectorindex, download_model
+from app.services.git_service import git_clone, git_pull
+from app.services.db.reset_database import reset_database
+from app.utils.url_operation import extract_last_segment
+from app.core.ragindex import MyVectorDB
+
+router = APIRouter()
+
+
+@router.get("/v1/")
+def home():
+    return {"result": "hello world"}
+
+
+@router.post("/v1/createVectorDatabase")
+async def create_vector_database(request: ModelPath, background_tasks: BackgroundTasks):
+    receipt_number = str(uuid.uuid4())
+    create_task(receipt_number, "createVectorDatabase")  # タスクをデータベースに保存
+    background_tasks.add_task(create_vectorindex, request.modelurl, receipt_number)
+    return {"receipt_number": receipt_number}
+
+
+@router.post("/v1/reloadVectorDatabase")
+def reloard_vectordb(request: ModelPath):
+    _modelname = extract_last_segment(request.modelurl)
+    if MyVectorDB.reload(_modelname):
+        return {"message": "OK"}
+    else:
+        return {"message": "NG"}
+
+
+@router.get("/v1/check-task/{task_id}")
+async def check_task(task_id: str):
+    return get_task_status(task_id)
+
+
+@router.post("/v1/reset-database")
+def reset_db():
+    try:
+        reset_database()
+        return {"message": "Database has been reset successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error resetting database: {str(e)}")
+
+
+@router.post("/v1/similarity_search_with_score")
+def similarity_search_with_score(request: SimilaritySearchRequest):
+    _modelname = extract_last_segment(request.modelurl)
+    if MyVectorDB.getindexstatus(_modelname):
+        return {"similarity_search_with_score": MyVectorDB.similarity_search_with_score(_modelname, request.query)}
+    else:
+        return {"message": "No vector database exists that can be loaded.After creating the vector database, please reload it."}
+
+
+@router.post("/v1/download_model")
+async def download_model_api(request: ModelPath, background_tasks: BackgroundTasks):
+    receipt_number = str(uuid.uuid4())
+    print(request.githuburl)
+    create_task(receipt_number, "download_model")  # タスクをデータベースに保存
+    background_tasks.add_task(download_model, request.modelurl, receipt_number)
+    return {"receipt_number": receipt_number}
+
+
+@router.post("/v1/git_clone")
+def git_clone_api(request: GitPath):
+    return {"result": git_clone(request.githuburl)}
+
+
+@router.post("/v1/git_pull")
+def git_pull_api(request: GitPath):
+    return {"result": git_pull(request.githuburl)}
