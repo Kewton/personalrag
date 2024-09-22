@@ -31,7 +31,7 @@ def create_vectorindex(modelurl: str, task_id: str):
 def download_model(githuburl: str, task_id: str):
     print("download_model start")
     _remarks = "download_model"
-    update_task(task_id, "start", _remarks)
+    update_task(task_id, _remarks)
     try:
         _path = os.path.join(MODEL_DOWNLOAD_DIR, extract_last_segment(githuburl))
         remove_directory_if_exists(_path)
