@@ -8,13 +8,25 @@ from app.services.task_service import create_vectorindex, download_model
 from app.services.git_service import git_clone, git_pull
 from app.services.db.reset_database import reset_database
 from app.utils.url_operation import extract_last_segment
+from app.core.llm import personalrag
 from app.core.ragindex import MyVectorDB
+from app.utils.logger import declogger, writeinfolog, writedebuglog
 
 router = APIRouter()
 
 
-@router.get("/v1/")
+@declogger
+def hello():
+    writedebuglog("logtest_debug")
+    writeinfolog("logtest_info")
+    return
+
+
+@router.get("/v1/",
+            summary="hello world",
+            description="hello worldです。疎通確認に使用してください。")
 def home():
+    hello()
     return {"result": "hello world"}
 
 
@@ -53,7 +65,22 @@ def reset_db():
 def similarity_search_with_score(request: SimilaritySearchRequest):
     _modelname = extract_last_segment(request.modelurl)
     if MyVectorDB.getindexstatus(_modelname):
-        return {"similarity_search_with_score": MyVectorDB.similarity_search_with_score(_modelname, request.query)}
+        return MyVectorDB.similarity_search_with_score(_modelname, request.query)
+    else:
+        return {"message": "No vector database exists that can be loaded.After creating the vector database, please reload it."}
+
+
+@router.post("/v1/rag")
+def rag(request: SimilaritySearchRequest):
+    _modelname = extract_last_segment(request.modelurl)
+    if MyVectorDB.getindexstatus(_modelname):
+        similarity_search_result = MyVectorDB.similarity_search_with_score(_modelname, request.query)
+        result = personalrag(request.query, similarity_search_result)
+        return {
+            "input_query": request.query,
+            "similarity_search_result": similarity_search_result,
+            "rag_result": result
+            }
     else:
         return {"message": "No vector database exists that can be loaded.After creating the vector database, please reload it."}
 

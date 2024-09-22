@@ -4,6 +4,7 @@ import os
 import faiss
 import numpy as np
 from app.core.config import INDEX_SAVE_DIR, MODEL_DOWNLOAD_DIR
+import json
 
 
 def normalize_vectors(vectors):
@@ -67,21 +68,23 @@ class ragmodel:
     def similarity_search_with_score(self, _question, _k=5):
         results = self.index.similarity_search_with_score(_question, k=_k)
 
-        _context = ""
+        _context = []
         for _document, score in results:
-            _context += f"""
-            ## source
-            {_document.metadata["source"]}
-
-            ### score
-            metric:{self._metric}
-            score:{score}
-
-            ### page_content
-            {_document.page_content}
-
-            """
-        return _context
+            _context.append(
+                {
+                    "source": _document.metadata["source"],
+                    "metric": self._metric,
+                    "score": float(score),
+                    "page_content": _document.page_content
+                }
+            )
+        response = {
+            "input_query": _question,
+            "similarity_search_result": _context
+        }
+        response = json.dumps(response, ensure_ascii=False, indent=4)
+        print(response)
+        return response
 
 
 class ragindex:

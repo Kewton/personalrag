@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class GitPath(BaseModel):
-    githuburl: str
+    githuburl: str = Field(..., title="githuburl", description="githubのURL")
