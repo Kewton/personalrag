@@ -91,7 +91,7 @@ def setfileConfig(_path):
 
 def declogger(func):
     curframe = inspect.currentframe()
-    calframe = inspect.getouterframes(curframe, 2)
+    calframe = inspect.getouterframes(curframe, 3)
     fn = calframe[1][1].split("/")
     filename = fn[len(fn) - 1]
     modulename = fn[len(fn) - 2]

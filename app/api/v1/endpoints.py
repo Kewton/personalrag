@@ -1,10 +1,11 @@
 import uuid
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path
 from app.schemas.model_path import ModelPath
 from app.schemas.search import SimilaritySearchRequest
 from app.schemas.git_path import GitPath
+from app.schemas.recreate_schema import Recreate
 from app.services.db.task_result import get_task_status, create_task
-from app.services.task_service import create_vectorindex, download_model
+from app.services.task_service import create_vectorindex, download_model, recreate_vectorindex
 from app.services.git_service import git_clone, git_pull
 from app.services.db.reset_database import reset_database
 from app.utils.url_operation import extract_last_segment
@@ -25,13 +26,13 @@ def hello():
 @router.get("/v1/",
             summary="hello world",
             description="hello worldです。疎通確認に使用してください。")
-def home():
+def home_hello_world():
     hello()
     return {"result": "hello world"}
 
 
 @router.post("/v1/createVectorDatabase")
-async def create_vector_database(request: ModelPath, background_tasks: BackgroundTasks):
+async def create_vector_database_task(request: ModelPath, background_tasks: BackgroundTasks):
     receipt_number = str(uuid.uuid4())
     create_task(receipt_number, "createVectorDatabase")  # タスクをデータベースに保存
     background_tasks.add_task(create_vectorindex, request.modelurl, receipt_number)
@@ -48,7 +49,7 @@ def reloard_vectordb(request: ModelPath):
 
 
 @router.get("/v1/check-task/{task_id}")
-async def check_task(task_id: str):
+async def check_task(task_id: str = Path(..., description="Enter the task ID. Example: default_task_id")):
     return get_task_status(task_id)
 
 
@@ -88,7 +89,7 @@ def rag(request: SimilaritySearchRequest):
 @router.post("/v1/download_model")
 async def download_model_api(request: ModelPath, background_tasks: BackgroundTasks):
     receipt_number = str(uuid.uuid4())
-    print(request.githuburl)
+    print(request.modelurl)
     create_task(receipt_number, "download_model")  # タスクをデータベースに保存
     background_tasks.add_task(download_model, request.modelurl, receipt_number)
     return {"receipt_number": receipt_number}
@@ -102,3 +103,11 @@ def git_clone_api(request: GitPath):
 @router.post("/v1/git_pull")
 def git_pull_api(request: GitPath):
     return {"result": git_pull(request.githuburl)}
+
+
+@router.post("/v1/update_vectordatabase")
+async def update_vectordatabase(request: Recreate, background_tasks: BackgroundTasks):
+    receipt_number = str(uuid.uuid4())
+    create_task(receipt_number, "recreate_database")  # タスクをデータベースに保存
+    background_tasks.add_task(recreate_vectorindex, request.githuburl, request.modelurl, receipt_number)
+    return {"receipt_number": receipt_number}

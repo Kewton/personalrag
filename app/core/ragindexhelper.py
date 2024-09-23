@@ -2,17 +2,19 @@ from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from langchain.text_splitter import MarkdownTextSplitter
 import os
 import glob
-
+from app.utils.logger import declogger, writeinfolog, writedebuglog
 
 markdown_splitter = MarkdownTextSplitter(chunk_size=100, chunk_overlap=20)
 
 
+@declogger
 def markdownLoadeAndSplite(_file_name):
     loader = UnstructuredMarkdownLoader(_file_name)
     _docs = loader.load()
     return markdown_splitter.split_documents(_docs)
 
 
+@declogger
 def doclist2docs(_doclist):
     documents = []
     for _filename in _doclist:
@@ -22,6 +24,7 @@ def doclist2docs(_doclist):
     return documents
 
 
+@declogger
 def get_markdown_files(directory_path: str) -> list:
     """
     指定したディレクトリパスから再帰的にMarkdownファイルを取得し、リストに格納して返す関数。
@@ -37,6 +40,7 @@ def get_markdown_files(directory_path: str) -> list:
     return markdown_files
 
 
+@declogger
 def createDocuments(_doc_dir):
     _doclist = get_markdown_files(_doc_dir)
     documents = doclist2docs(_doclist)

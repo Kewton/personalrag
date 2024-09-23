@@ -82,8 +82,8 @@ class ragmodel:
             "input_query": _question,
             "similarity_search_result": _context
         }
-        response = json.dumps(response, ensure_ascii=False, indent=4)
-        print(response)
+        #response = json.dumps(response, ensure_ascii=False, indent=4)
+        #print(response)
         return response
 
 

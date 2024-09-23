@@ -16,7 +16,8 @@ claude_client = anthropic.Anthropic(
 def personalrag(_inquery, _similarity_search_result):
     # context = "\n".join([document.page_content for document in _similarity_search_result])
 
-    context = json.loads(_similarity_search_result)
+    #context = json.loads(_similarity_search_result)
+    context = _similarity_search_result
     # context = _similarity_search_result
 
     _prompt = f"""
@@ -61,7 +62,7 @@ def personalrag(_inquery, _similarity_search_result):
         "出力文フォーマット": {
             "input_statement_after_correction": "",
             "context_after_correction": "",
-            "Supplemented_context": "",
+            "supplemented_context": "",
             "answer_to_input_sentence": ""
         }
     }
@@ -74,6 +75,8 @@ def personalrag(_inquery, _similarity_search_result):
     
     content, role = execLlmApi(selected_model="gpt-4o-mini", messages=messages, encoded_file="")
     print(role)
+    #content = json.dumps(content, ensure_ascii=False, indent=4)
+    content = json.loads(content)
     return content
 
 

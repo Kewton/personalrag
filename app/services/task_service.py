@@ -7,8 +7,12 @@ from app.utils.dir_operation import remove_directory_if_exists
 from app.services.db.task_result import update_task, close_task
 from app.core.config import INDEX_SAVE_DIR, MODEL_DOWNLOAD_DIR, DOC_DOWNLOAD_DIR
 from app.core.ragindexhelper import createDocuments
+from app.services.git_service import git_pull
+from app.core.ragindex import MyVectorDB
+from app.utils.logger import declogger, writeinfolog, writedebuglog
 
 
+@declogger
 def create_vectorindex(modelurl: str, task_id: str):
     _doc_dir = DOC_DOWNLOAD_DIR
     _model_path = os.path.join(MODEL_DOWNLOAD_DIR, extract_last_segment(modelurl))
@@ -28,6 +32,7 @@ def create_vectorindex(modelurl: str, task_id: str):
         close_task(task_id, "abnormalend", e)
 
 
+@declogger
 def download_model(githuburl: str, task_id: str):
     print("download_model start")
     _remarks = "download_model"
@@ -38,5 +43,33 @@ def download_model(githuburl: str, task_id: str):
         run_shell_command("git lfs install")
         run_shell_command(f"git clone {githuburl} {_path}")
         close_task(task_id, "success", _remarks)
+    except Exception as e:
+        close_task(task_id, "abnormalend", e)
+
+
+@declogger
+def recreate_vectorindex(githuburl: str, modelurl: str, task_id: str):
+    try:
+        _doc_dir = DOC_DOWNLOAD_DIR
+        _model_path = os.path.join(MODEL_DOWNLOAD_DIR, extract_last_segment(modelurl))
+        _save_path = os.path.join(INDEX_SAVE_DIR, extract_last_segment(modelurl))
+
+        update_task(task_id, "git pull start")
+        git_pull(githuburl)
+
+        update_task(task_id, "create index: " + _doc_dir + ";" + _model_path)
+        documents = createDocuments(_doc_dir)
+        index = FAISS.from_documents(
+            documents=documents,
+            embedding=HuggingFaceEmbeddings(model_name=_model_path),
+        )
+        update_task(task_id, "save index")
+        index.save_local(_save_path)
+
+        update_task(task_id, "reload index")
+        _modelname = extract_last_segment(modelurl)
+        MyVectorDB.reload(_modelname)
+
+        close_task(task_id, "success", _doc_dir + ";" + _model_path)
     except Exception as e:
         close_task(task_id, "abnormalend", e)
