@@ -4,7 +4,7 @@ import os
 import glob
 from app.utils.logger import declogger, writeinfolog, writedebuglog
 
-markdown_splitter = MarkdownTextSplitter(chunk_size=100, chunk_overlap=20)
+markdown_splitter = MarkdownTextSplitter(chunk_size=500, chunk_overlap=100)
 
 
 @declogger

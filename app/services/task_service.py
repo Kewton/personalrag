@@ -7,7 +7,7 @@ from app.utils.dir_operation import remove_directory_if_exists
 from app.services.db.task_result import update_task, close_task
 from app.core.config import INDEX_SAVE_DIR, MODEL_DOWNLOAD_DIR, DOC_DOWNLOAD_DIR
 from app.core.ragindexhelper import createDocuments
-from app.services.git_service import git_pull
+from app.services.git_service import git_clone
 from app.core.ragindex import MyVectorDB
 from app.utils.logger import declogger, writeinfolog, writedebuglog
 
@@ -54,8 +54,8 @@ def recreate_vectorindex(githuburl: str, modelurl: str, task_id: str):
         _model_path = os.path.join(MODEL_DOWNLOAD_DIR, extract_last_segment(modelurl))
         _save_path = os.path.join(INDEX_SAVE_DIR, extract_last_segment(modelurl))
 
-        update_task(task_id, "git pull start")
-        git_pull(githuburl)
+        update_task(task_id, "git_clone start")
+        git_clone(githuburl)
 
         update_task(task_id, "create index: " + _doc_dir + ";" + _model_path)
         documents = createDocuments(_doc_dir)
