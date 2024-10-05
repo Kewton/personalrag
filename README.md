@@ -8,6 +8,9 @@ pip install -r requirements.txt
 # exec
 ```
 uvicorn app.main:app --reload
+
+uvicorn app.main:app --host 192.168.11.11  --reload
+
 ```
 
 # .env

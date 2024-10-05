@@ -1,5 +1,8 @@
 from fastapi import FastAPI
-from app.api.v1 import endpoints
+from app.api.v1 import vectorrag_endpoints
+from app.api.v1 import localllm_endpoints
+from app.api.v1 import common_endpoints
+from app.api.v1 import graphrag_endpoints
 from app.db.session import engine
 from app.db.base import Base
 import ssl
@@ -17,9 +20,7 @@ app = FastAPI(
     }
 )
 
-app.include_router(endpoints.router)
-
-# データベースのテーブルを作成
-Base.metadata.create_all(bind=engine)
-
-app.include_router(endpoints.router)
+app.include_router(common_endpoints.router, prefix="/v1")
+app.include_router(vectorrag_endpoints.router, prefix="/v1")
+app.include_router(localllm_endpoints.router, prefix="/v1")
+app.include_router(graphrag_endpoints.router, prefix="/v1")

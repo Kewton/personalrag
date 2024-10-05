@@ -1,5 +1,6 @@
 import os
 import shutil
+from app.utils.logger import declogger, writeinfolog, writedebuglog, writeerrorlog
 
 
 def remove_directory_if_exists(directory_path):
@@ -13,10 +14,10 @@ def remove_directory_if_exists(directory_path):
         if os.path.isdir(directory_path):
             try:
                 shutil.rmtree(directory_path)
-                print(f"ディレクトリを削除しました: {directory_path}")
+                writeinfolog(f"ディレクトリを削除しました: {directory_path}")
             except Exception as e:
-                print(f"ディレクトリの削除に失敗しました: {e}")
+                writeerrorlog(f"ディレクトリの削除に失敗しました: {e}")
         else:
-            print(f"指定されたパスはディレクトリではありません: {directory_path}")
+            writeinfolog(f"指定されたパスはディレクトリではありません: {directory_path}")
     else:
-        print(f"ディレクトリは存在しません: {directory_path}")
+        writeinfolog(f"ディレクトリは存在しません: {directory_path}")

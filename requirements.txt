@@ -12,3 +12,5 @@ sqlalchemy
 python-dotenv
 openai
 anthropic
+requests
+neo4j
