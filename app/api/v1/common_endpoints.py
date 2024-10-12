@@ -14,11 +14,11 @@ def hello():
 
 
 @router.get("/",
-            summary="hello world",
-            description="hello worldです。疎通確認に使用してください。")
+            summary="Hello World",
+            description="Hello Worldです。疎通確認に使用してください。")
 def home_hello_world():
     hello()
-    return {"result": "hello world"}
+    return {"message": "Hello World"}
 
 
 @router.get("/check-task/{task_id}")

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path
-from app.schemas.ollama_chat import OllamaChat
+from app.schemas.localllm.ollama_chat import OllamaChat
 from app.core.config import LOCUL_OLLAMA_URI
 import requests
 

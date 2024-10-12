@@ -6,9 +6,9 @@ from app.utils.url_operation import extract_last_segment
 from app.utils.dir_operation import remove_directory_if_exists
 from app.services.db.task_result import update_task, close_task
 from app.core.config import INDEX_SAVE_DIR, MODEL_DOWNLOAD_DIR, DOC_DOWNLOAD_DIR
-from app.core.ragindexhelper import createDocuments
+from app.core.vectorindex.ragindexhelper import createDocuments
 from app.services.exec_gitcommand import git_clone
-from app.core.ragindex import MyVectorDB
+from app.core.vectorindex.myVectorDBIndexies import MyVectorDB
 from app.utils.logger import declogger, writeinfolog, writedebuglog
 
 

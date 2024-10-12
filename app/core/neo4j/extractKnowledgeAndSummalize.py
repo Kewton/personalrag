@@ -9,7 +9,7 @@ chatgptapi_client = OpenAI(
 )
 
 
-class KnowledgeExtractor:
+class ExtractKnowledgeAndSummalize:
 
     def __init__(self, uri, user, password):
         # Neo4jドライバの作成

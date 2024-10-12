@@ -12,7 +12,7 @@ def normalize_vectors(vectors):
     return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
 
 
-class ragmodel:
+class LoadVectorDBIndex:
     def __init__(self, _modelname):
         self.model = _modelname
         self.storage_path = os.path.join(INDEX_SAVE_DIR, _modelname)
@@ -87,14 +87,14 @@ class ragmodel:
         return response
 
 
-class ragindex:
+class MyVectorDBIndexies:
     def __init__(self):
         self.models = {}
 
     def reload(self, _modelname):
         model = self.models.get(_modelname)
         if model is None:
-            self.models[_modelname] = ragmodel(_modelname)
+            self.models[_modelname] = LoadVectorDBIndex(_modelname)
             return self.models[_modelname].indexstatus
         else:
             model.reload()
@@ -121,4 +121,4 @@ class ragindex:
                     return "error_2"
 
 
-MyVectorDB = ragindex()
+MyVectorDB = MyVectorDBIndexies()

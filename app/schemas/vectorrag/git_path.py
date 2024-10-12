@@ -7,5 +7,5 @@ class GitPath(BaseModel):
         default=SAMPLE_GITHUB_URL,  # デフォルト値
         title="githuburl",
         description="GitHubのURL",
-        example="https://github.com/example/repository"  # Swagger UIに表示されるサンプル値
+        json_schema_extra={"example": "https://github.com/example/repository"}  # Swagger UIに表示されるサンプル値
     )

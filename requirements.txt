@@ -14,3 +14,7 @@ openai
 anthropic
 requests
 neo4j
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+beautifulsoup4
