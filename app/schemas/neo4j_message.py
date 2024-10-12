@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class Neo4jSchema(BaseModel):
+class Neo4jMessage(BaseModel):
     message: str

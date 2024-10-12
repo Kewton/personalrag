@@ -1,12 +1,12 @@
 import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path
-from app.schemas.model_path import ModelPath
-from app.schemas.search import SimilaritySearchRequest
+from app.schemas.vectordb_modelpath import VectorDBModelPath
+from app.schemas.similarity_search import SimilaritySearchRequest
 from app.schemas.git_path import GitPath
-from app.schemas.recreate_schema import Recreate
+from app.schemas.recreate_vectorindex import RecreateVecorIndex
 from app.services.db.task_result import get_task_status, create_task
-from app.services.task_service import create_vectorindex, download_model, recreate_vectorindex
-from app.services.git_service import git_clone, git_pull
+from app.services.create_vectorindex import create_vectorindex, download_model, recreate_vectorindex
+from app.services.exec_gitcommand import git_clone, git_pull
 from app.services.db.reset_database import reset_database
 from app.utils.url_operation import extract_last_segment
 from app.core.llm import personalrag
@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("/createVectorDatabase")
-async def create_vector_database_task(request: ModelPath, background_tasks: BackgroundTasks):
+async def create_vector_database_task(request: VectorDBModelPath, background_tasks: BackgroundTasks):
     receipt_number = str(uuid.uuid4())
     create_task(receipt_number, "createVectorDatabase")  # タスクをデータベースに保存
     background_tasks.add_task(create_vectorindex, request.modelurl, receipt_number)
@@ -25,7 +25,7 @@ async def create_vector_database_task(request: ModelPath, background_tasks: Back
 
 
 @router.post("/reloadVectorDatabase")
-def reloard_vectordb(request: ModelPath):
+def reloard_vectordb(request: VectorDBModelPath):
     _modelname = extract_last_segment(request.modelurl)
     if MyVectorDB.reload(_modelname):
         return {"message": "OK"}
@@ -67,7 +67,7 @@ def rag(request: SimilaritySearchRequest):
 
 
 @router.post("/download_model")
-async def download_model_api(request: ModelPath, background_tasks: BackgroundTasks):
+async def download_model_api(request: VectorDBModelPath, background_tasks: BackgroundTasks):
     receipt_number = str(uuid.uuid4())
     print(request.modelurl)
     create_task(receipt_number, "download_model")  # タスクをデータベースに保存
