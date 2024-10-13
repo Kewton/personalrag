@@ -1,5 +1,8 @@
 import os.path
-
+from app.core.config import GOOGLE_APIS_GMAIL_SEND_TOKEN_PATH, GOOGLE_APIS_CREDENTIALS_PATH
+from app.utils.logger import declogger, writeinfolog, writedebuglog, writeerrorlog
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -10,19 +13,37 @@ import base64
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
-GOOGLE_APIS_GMAIL_SEND_TOKEN_PATH = 'token_gmail.json'
-GOOGLE_APIS_CREDENTIALS_PATH = 'credentials.json' 
 
+def send_email(to_email, subject, body):
+    try:
+        service = get_gmail_service()
 
-def send_email(service, to_email, subject, body):
-    print("send_email 1")
-    raw_msg = base64.urlsafe_b64encode(
-        f"Subject: {subject}\nTo: {to_email}\n\n{body}".encode("utf-8")
-    ).decode("utf-8")
+        # MIMEメッセージを作成
+        message = MIMEMultipart()
+        message['To'] = to_email
+        message['From'] = "me"
+        message['Subject'] = subject
+        
+        # メール本文を設定
+        msg_body = MIMEText(body, "plain", "utf-8")
+        message.attach(msg_body)
 
-    print("send_email 2")
-    message = {"raw": raw_msg}
-    service.users().messages().send(userId="me", body=message).execute()
+        # メッセージをbase64エンコード
+        raw_msg = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+        message_body = {"raw": raw_msg}
+
+        # メールを送信
+        service.users().messages().send(userId="me", body=message_body).execute()
+
+        return True
+    except HttpError as e:
+        print(f"Standard HttpError: {e.stderr}")
+        writeerrorlog(f"Standard HttpError: {e.stderr}")
+        return False
+    except Exception as e:
+        print(f"Standard Exception: {e.stderr}")
+        writeerrorlog(f"Standard Exception: {e.stderr}")
+        return False
 
 
 def get_gmail_service():
@@ -44,9 +65,8 @@ def get_gmail_service():
 
 
 if __name__ == "__main__":
-    service = get_gmail_service()
+    #service = get_gmail_service()
     send_email(
-        service,
         "newtons.boiled.clock@gmail.com", 
         "test", 
         "testtest")

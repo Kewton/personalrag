@@ -1,5 +1,6 @@
 import os.path
-
+from app.core.config import GOOGLE_APIS_GMAIL_READONLY_TOKEN_PATH, GOOGLE_APIS_CREDENTIALS_PATH
+from app.utils.logger import writedebuglog
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -7,12 +8,28 @@ from googleapiclient.discovery import build
 import base64
 from email.mime.text import MIMEText
 from bs4 import BeautifulSoup
+import html2text
 
 # スコープ: Gmailの読み取り権限
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-GOOGLE_APIS_GMAIL_READONLY_TOKEN_PATH = 'token_gmail_readonly.json'
-GOOGLE_APIS_CREDENTIALS_PATH = 'credentials.json' 
+
+def convert_html_to_markdown(html_content):
+    print("convert start")
+    # html2textのインスタンスを作成
+    converter = html2text.HTML2Text()
+
+    # リンクを無視する
+    converter.ignore_links = True
+    # 画像を無視する
+    converter.ignore_images = False
+    # 幅制限を無効にする
+    converter.body_width = 0
+
+    # HTMLをMarkdownに変換
+    markdown_content = converter.handle(html_content)
+    return markdown_content
+
 
 # Gmail APIサービスの認証と初期化
 def create_gmail_service():
@@ -29,6 +46,7 @@ def create_gmail_service():
             token.write(creds.to_json())
     service = build('gmail', 'v1', credentials=creds)
     return service
+
 
 # 件名に指定されたキーワードが含まれるメールを検索し、本文を取得する関数
 def get_emails_by_subject(subject_keyword):
@@ -63,11 +81,14 @@ def get_emails_by_subject(subject_keyword):
         if body_data:
             # Base64でエンコードされたデータをデコード
             body_decoded = base64.urlsafe_b64decode(body_data.encode('ASCII')).decode('utf-8')
-            email_bodies.append(body_decoded)
-            print(f"Email Body: {body_decoded}")
+            email_bodies.append({"email_body": convert_html_to_markdown(body_decoded)})
+            # print(f"Email Body: {body_decoded}")
         else:
             print(f"Could not extract body from email with ID {message['id']}")
 
+    # markdown_bodies = [convert_html_to_markdown(body) for body in email_bodies]
+    # writedebuglog(markdown_bodies)
+    print(len(email_bodies))
     return email_bodies
 
 # get_emails_by_subject("週刊Life is beautiful ２０２４年１０月１日号")

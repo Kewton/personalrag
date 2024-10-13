@@ -1,5 +1,5 @@
 import os
-from app.utils.run_shelll_command import run_shell_command
+from app.utils.run_shell_command import run_shell_command
 from app.utils.url_operation import extract_path
 from app.core.config import DOC_DOWNLOAD_DIR
 from app.utils.logger import declogger, writeinfolog, writedebuglog, writeerrorlog

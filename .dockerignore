@@ -2,3 +2,6 @@ __pycache__/
 venv/*
 mywork/*
 .DS_Store
+.coverage
+tests/
+.pytest_cache

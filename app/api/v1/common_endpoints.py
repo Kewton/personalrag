@@ -22,5 +22,5 @@ def home_hello_world():
 
 
 @router.get("/check-task/{task_id}")
-async def check_task(task_id: str = Path(..., description="Enter the task ID. Example: default_task_id")):
+def check_task(task_id: str = Path(..., description="Enter the task ID. Example: default_task_id")):
     return get_task_status(task_id)

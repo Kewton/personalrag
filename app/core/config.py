@@ -23,6 +23,9 @@ print(f"PROJECT_ROOT_DIRECTORY_2 = {os.getenv('PROJECT_ROOT_DIRECTORY', './')}")
 print(f"OPENAI_API_KEY = {os.getenv('OPENAI_API_KEY')}")
 print(f"CLAUDE_API_KEY = {os.getenv('CLAUDE_API_KEY')}")
 
+# PROJECT_ROOT_DIRECTORY
+PROJECT_ROOT_DIRECTORY = os.getenv('PROJECT_ROOT_DIRECTORY', "./")
+
 # db
 SQLALCHEMY_DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL', "sqlite:///./test.db")
 ensure_directory_exists(SQLALCHEMY_DATABASE_URL)

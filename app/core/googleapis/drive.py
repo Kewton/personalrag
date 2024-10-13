@@ -1,3 +1,4 @@
+from app.core.config import GOOGLE_APIS_DRIVE_TOKEN_PATH, GOOGLE_APIS_CREDENTIALS_PATH
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -9,8 +10,6 @@ import io
 # スコープ: 読み取り/書き込み
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
-GOOGLE_APIS_DRIVE_TOKEN_PATH = 'token.json'
-GOOGLE_APIS_CREDENTIALS_PATH = 'credentials.json' 
 
 # 認証プロセス
 def authenticate():
@@ -60,7 +59,7 @@ def upload_file(file_name, file_path, mime_type, folder_id=None):
     file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
 
     print(f"File ID: {file.get('id')}")
-
+    return file.get('id')
 
 # Resumable Uploadを実行する関数
 def resumable_upload(file_name, file_path, mime_type, folder_id=None):
@@ -86,6 +85,39 @@ def resumable_upload(file_name, file_path, mime_type, folder_id=None):
             print(f"Uploaded {int(status.progress() * 100)}%")
 
     print(f"Upload Complete. File ID: {response.get('id')}")
+
+
+# フォルダが存在しなければ作成し、フォルダIDを返却する関数
+def get_or_create_folder(folder_path):
+    service = create_service()
+
+    # パスを分割して処理 (例えば "./mywork/myapp/テスト" を ['mywork', 'myapp', 'テスト'] に分割)
+    folder_names = folder_path.strip("./").split('/')
+
+    # ルートフォルダから開始 (Google Driveのルートフォルダは'root'と指定)
+    parent_id = 'root'
+
+    # 各フォルダ名を順に処理し、フォルダが存在するか確認する
+    for folder_name in folder_names:
+        query = f"'{parent_id}' in parents and name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        results = service.files().list(q=query, fields="files(id, name)").execute()
+        files = results.get('files', [])
+
+        if files:
+            # フォルダが存在する場合、そのフォルダIDを取得して次の階層に進む
+            parent_id = files[0]['id']
+        else:
+            # フォルダが存在しない場合、フォルダを作成する
+            file_metadata = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder',
+                'parents': [parent_id]  # 親フォルダのIDを指定
+            }
+            folder = service.files().create(body=file_metadata, fields='id').execute()
+            parent_id = folder['id']  # 作成したフォルダのIDを取得
+
+    # 最後のフォルダIDを返す（これが最下層のフォルダ）
+    return parent_id
 
 
 def download_file(file_id, destination_path):
@@ -144,6 +176,75 @@ def get_folder_id_by_path(folder_path):
 
     # 最後に見つかったフォルダのIDを返す
     return parent_id
+
+
+def list_files_in_folder_recursive(folder_id, current_path, file_list):
+    """
+    フォルダ内のファイルとサブフォルダを再帰的に取得しリストに格納
+    """
+    service = create_service()
+    query = f"'{folder_id}' in parents"
+    results = service.files().list(
+        q=query,
+        pageSize=100,
+        fields="nextPageToken, files(id, name, mimeType)"
+    ).execute()
+
+    files = results.get('files', [])
+
+    if not files:
+        return
+
+    # ファイルをリストに追加
+    for file in files:
+        # ファイルのフルパスを作成
+        full_path = os.path.join(current_path, file['name'])
+        
+        # ファイル情報をリストに追加
+        file_list.append({
+            'name': file['name'],
+            'id': file['id'],
+            'mimeType': file['mimeType'],
+            'path': full_path
+        })
+        
+        # MIMEタイプがフォルダの場合、再帰的にサブフォルダ内のファイルを取得
+        if file['mimeType'] == 'application/vnd.google-apps.folder':
+            list_files_in_folder_recursive(file['id'], full_path, file_list)
+
+
+def get_file_id_and_mime_type(folder_path):
+    """
+    指定されたパスに基づいて、ファイルまたはフォルダのIDとmimeTypeを取得
+    """
+    service = create_service()
+
+    # パスを分割 (例えば "./mywork/myapp/テスト/filename.pdf" を ['mywork', 'myapp', 'テスト', 'filename.pdf'] に分割)
+    folder_names = folder_path.strip("./").split('/')
+
+    # ルートフォルダから開始 (Google Driveのルートフォルダは'root'と指定)
+    parent_id = 'root'
+
+    # 各フォルダ/ファイル名ごとにDrive APIを使用して次の階層に進む
+    for name in folder_names:
+        query = f"'{parent_id}' in parents and name='{name}' and trashed=false"
+        results = service.files().list(
+            q=query,
+            fields="files(id, name, mimeType)"
+        ).execute()
+
+        files = results.get('files', [])
+
+        if not files:
+            print(f"'{name}' not found in the specified path.")
+            return None
+
+        # 現在のフォルダ/ファイルの情報を取得
+        file_info = files[0]
+        parent_id = file_info['id']  # 次の階層に進むためのフォルダIDを更新
+
+    # 最後に見つかったファイル/フォルダのIDとmimeTypeを返す
+    return file_info['name'], file_info['id'], file_info['mimeType']
 
 
 def list_files_in_folder(folder_id):

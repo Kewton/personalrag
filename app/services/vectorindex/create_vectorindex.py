@@ -1,7 +1,7 @@
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 import os
-from app.utils.run_shelll_command import run_shell_command
+from app.utils.run_shell_command import run_shell_command
 from app.utils.url_operation import extract_last_segment
 from app.utils.dir_operation import remove_directory_if_exists
 from app.services.db.task_result import update_task, close_task

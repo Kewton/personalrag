@@ -3,3 +3,5 @@ venv/*
 mywork/*
 .env
 .DS_Store
+.coverage
+.pytest_cache
